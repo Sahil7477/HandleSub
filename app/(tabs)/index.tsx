@@ -17,11 +17,29 @@ import ListHeading from "@/components/ListHeading";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { useState } from "react";
+import { useAuth, useUser } from "@clerk/expo";
+import { useRouter } from "expo-router";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
+    const { user } = useUser()
+    const {isLoaded, isSignedIn} = useAuth()
+    const router = useRouter()
   const [expandedSubId, setExpandedSubId] = useState<string | null>(null);
+// {
+//   isLoaded && !isSignedIn && router.replace("/sign-in")
+// }
+
+// {
+//   isLoaded && isSignedIn
+// }
+if(!isLoaded) return null;
+if(!isSignedIn) {
+  router.replace("/sign-in");
+  return null;
+}
+
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
