@@ -3,12 +3,21 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
 import { useClerk, useUser } from '@clerk/expo';
 import images from '@/constants/images';
+import { Redirect } from 'expo-router';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Settings = () => {
     const { signOut } = useClerk();
-    const { user } = useUser();
+    const { user, isLoaded, isSignedIn } = useUser();
+
+    if(!isLoaded){
+return null;
+    }
+
+    if(!isSignedIn){
+        return < Redirect href="/(auth)/sign-in" />
+    }
 
     const handleSignOut = async () => {
         try {

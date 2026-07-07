@@ -17,6 +17,7 @@ export default function Page() {
     const [emailAddress, setEmailAddress] = React.useState('')
     const [password, setPassword] = React.useState('')
     const [code, setCode] = React.useState('')
+    const [verifyError, setVerifyError] = React.useState('')
     // Client-side validation
     const emailValid = emailAddress.length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress);
     const passwordValid = password.length > 0;
@@ -48,12 +49,15 @@ export default function Page() {
         }
 
         const url = decorateUrl('/')
-        if (url.startsWith('http')) {
-          // @ts-ignore
-          window.location.href = url
-        } else {
-          router.push(url as Href)
-        }
+       if (url.startsWith('http')) {
+  if (typeof window !== 'undefined' && window.location) {
+    window.location.href = url
+  } else {
+    router.push('/' as Href)
+  }
+} else {
+  router.push(url as Href)
+}
       },
     })
   } else if (signIn.status === 'needs_second_factor') {
@@ -73,9 +77,17 @@ export default function Page() {
   }
 }
 const handleVerify = async () => {
-  await signIn.mfa.verifyEmailCode({ code })
+  setVerifyError('')
 
-  if (signIn.status === 'complete') {
+  try {
+    const result = await signIn.mfa.verifyEmailCode({ code })
+
+    // Only continue if verification succeeded.
+    if (!result || signIn.status !== 'complete') {
+      setVerifyError('The verification code is invalid or has expired.')
+      return
+    }
+
     await signIn.finalize({
       navigate: ({ session, decorateUrl }) => {
         if (session?.currentTask) {
@@ -84,16 +96,24 @@ const handleVerify = async () => {
         }
 
         const url = decorateUrl('/')
+
         if (url.startsWith('http')) {
-          // @ts-ignore
-          window.location.href = url
-        } else {
-          router.push(url as Href)
-        }
+  if (typeof window !== 'undefined' && window.location) {
+    window.location.href = url
+  } else {
+    router.push('/' as Href)
+  }
+} else {
+  router.push(url as Href)
+}
       },
     })
-  } else {
-    console.error('Sign-in attempt not complete:', signIn)
+  } catch (err: any) {
+    setVerifyError(
+      err?.errors?.[0]?.longMessage ??
+      err?.errors?.[0]?.message ??
+      'The verification code is invalid or has expired.'
+    )
   }
 }
 
@@ -145,6 +165,9 @@ if (signIn.status === 'needs_second_factor') {
                                         />
                                         {errors.fields.code && (
                                             <Text className="auth-error">{errors.fields.code.message}</Text>
+                                        )}
+                                        {verifyError && (
+                                            <Text className="auth-error">{verifyError}</Text>
                                         )}
                                     </View>
 
@@ -278,7 +301,7 @@ if (signIn.status === 'needs_second_factor') {
 
                         {/* Sign-Up Link */}
                         <View className="auth-link-row">
-                            <Text className="auth-link-copy">Don't have an account?</Text>
+                            <Text className="auth-link-copy">Don&apos;t have an account?</Text>
                             <Link href="/(auth)/sign-up" asChild>
                                 <Pressable>
                                     <Text className="auth-link">Create Account</Text>

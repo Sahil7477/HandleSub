@@ -18,7 +18,7 @@ import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { useState } from "react";
 import { useAuth, useUser } from "@clerk/expo";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -36,7 +36,7 @@ export default function App() {
 // }
 if(!isLoaded) return null;
 if(!isSignedIn) {
-  router.replace("/sign-in");
+  return < Redirect href="/(auth)/sign-in" />
   return null;
 }
 

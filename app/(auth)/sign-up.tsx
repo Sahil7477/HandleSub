@@ -47,38 +47,39 @@ const SignUp = () => {
     };
 
     const handleVerify = async () => {
-        await signUp.verifications.verifyEmailCode({
-            code,
-        });
+    const { error } = await signUp.verifications.verifyEmailCode({
+        code,
+    });
 
-        if (signUp.status === 'complete') {
-            await signUp.finalize({
-                navigate: ({ session, decorateUrl }) => {
-                    if (session?.currentTask) {
-                        console.log(session?.currentTask);
-                        return;
-                    }
+    if (error) {
+        console.error(JSON.stringify(error, null, 2));
+        return;
+    }
 
-                   
+    if (signUp.status === 'complete') {
+        await signUp.finalize({
+            navigate: ({ session, decorateUrl }) => {
+                if (session?.currentTask) {
+                    console.log(session.currentTask);
+                    return;
+                }
 
-                    const url = decorateUrl('/(tabs)');
-                    if (url.startsWith('http')) {
-                        // Only use window.location on web platform
-                        if (typeof window !== 'undefined' && window.location) {
-                            window.location.href = url;
-                        } else {
-                            // On native, just use router navigation
-                            router.replace('/(tabs)' as Href);
-                        }
+                const url = decorateUrl('/(tabs)');
+                if (url.startsWith('http')) {
+                    if (typeof window !== 'undefined' && window.location) {
+                        window.location.href = url;
                     } else {
-                        router.replace(url as Href);
+                        router.replace('/(tabs)' as Href);
                     }
-                },
-            });
-        } else {
-            console.error('Sign-up attempt not complete:', signUp);
-        }
-    };
+                } else {
+                    router.replace(url as Href);
+                }
+            },
+        });
+    } else {
+        console.error('Sign-up attempt not complete:', signUp);
+    }
+};
 
     // Don't show anything if already signed in or sign-up is complete
     if (signUp.status === 'complete' || isSignedIn) {
